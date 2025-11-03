@@ -1,7 +1,7 @@
 {
   "name": "t2py",
   "displayName": "t2py",
-  "publisher": "Roman Volodin",
+  "publisher": "romanvolodin",
   "description": "A lightweight Python helper that streamlines everyday routine tasks.",
   "version": "0.0.2",
   "engines": {
