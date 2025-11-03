@@ -1,6 +1,7 @@
 {
   "name": "t2py",
   "displayName": "t2py",
+  "publisher": "Roman Volodin",
   "description": "A lightweight Python helper that streamlines everyday routine tasks.",
   "version": "0.0.2",
   "engines": {
@@ -16,6 +17,7 @@
   "activationEvents": [
     "onCommand:t2py.convertList"
   ],
+  "icon": "icon.png",
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [

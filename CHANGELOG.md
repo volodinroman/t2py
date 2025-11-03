@@ -28,4 +28,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ---
 
 **Author:** Roman Volodin  
-**Repository:** [GitHub – t2py](https://github.com/YOUR_USERNAME/t2py)
+**Repository:** [GitHub – t2py](https://github.com/volodinroman/t2py)
