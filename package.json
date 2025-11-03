@@ -22,10 +22,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "t2py.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "t2py.convertList",
         "title": "t2py: Convert Lines to Python List"
       }
