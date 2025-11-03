@@ -2,7 +2,7 @@
   "name": "t2py",
   "displayName": "t2py",
   "description": "A lightweight Python helper that streamlines everyday routine tasks.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.105.0"
   },

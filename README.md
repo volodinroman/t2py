@@ -3,6 +3,7 @@
 A lightweight VS Code helper for Python developers that automates everyday routines.
 
 Author: Roman Volodin
+
 License: MIT
 
 ## Overview
