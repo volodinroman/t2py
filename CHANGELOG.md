@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - New command **"Convert Lines to Python List"**:
   - Converts selected text lines into a valid Python list.
-  - Normalizes Windows-style slashes (`\` → `/`) for cross-platform compatibility.
+  - Normalizes Windows-style slashes (`\` to `/`) for cross-platform compatibility.
   - Automatically adds quotes and commas.
   - Includes an interactive snippet placeholder for variable naming (`${1:my_list}`).
 
