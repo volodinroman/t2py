@@ -26,15 +26,24 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
 
-		const norm = (s: string) => s.replace(/\\/g, '/').replace(/"/g, '\\"');
-		const body = lines.map(l => `"${norm(l)}"`).join(',\n  ');
+		const norm = (s: string) => {
+			// remove trailing commas and spaces
+			let str = s.replace(/,+\s*$/, '');
+			// remove surrounding quotes
+			str = str.replace(/^["']|["']$/g, '');
+			// Escape only backslashes
+			str = str.replace(/\\/g, '/');
+			// Add correct quotes
+			return `"${str}"`;
+		};
 
-		// VS Code snippet with placeholder for variable name
+		const body = lines.map(norm).join(',\n  ');
 		const snippet = new vscode.SnippetString(`${'${1:my_list}'} = [\n  ${body}\n]\n`);
 		await editor.insertSnippet(snippet, rangeToProcess);
 	});
 
-	context.subscriptions.push( convertCmd);
+
+	context.subscriptions.push(convertCmd);
 }
 
 // This method is called when your extension is deactivated
