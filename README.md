@@ -17,3 +17,39 @@ Currently, it includes one core feature: converting selected text lines into a P
 - Automatically add quotes and commas.
 - Insert a snippet variable placeholder (default: `my_list`) so you can rename it instantly.
 
+```python
+# Original List
+/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json
+/home/volod/VSCodeExtensions/svggen/.vscode/settings.json
+/home/volod/VSCodeExtensions/svggen/.vscode/launch.json
+/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json
+
+# Python List
+my_list = [
+  "/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json",
+  "/home/volod/VSCodeExtensions/svggen/.vscode/settings.json",
+  "/home/volod/VSCodeExtensions/svggen/.vscode/launch.json",
+  "/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json"
+]
+```
+
+### Path Validation
+
+* Instantly validates whether file system paths actually exist on your machine.
+* Appends a clear status marker ">> success" or ">> fail" aligned to the right of each path.
+* Supports both single-line selection and full-document validation (automatically detects and ignores non-path lines).
+* Handles various formats gracefully, including quoted paths, comma-separated lists, and Python-style arrays.
+
+```
+# Original List
+/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json
+/home/volod/VSCodeExtensions/svggen/.vscode/settings.json
+/home/volod/VSCodeExtensions/svggen/.vscode/launch.json
+/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json
+
+# Validated list (one item has a typo)
+/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json       >> success
+/home/volod/VSCodeExtensions/svggen/.vscode/settings.json    >> success
+/home/voslod/VSCodeExtensions/svggen/.vscode/launch.json     >> fail
+/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json  >> success
+```

@@ -1,6 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -42,8 +45,68 @@ export function activate(context: vscode.ExtensionContext) {
 		await editor.insertSnippet(snippet, rangeToProcess);
 	});
 
+	// --- Command Validate Paths ---
+	const expandHome = (p: string) => p.startsWith('~') ? p.replace(/^~(?=\/|$)/, os.homedir()) : p;
 
-	context.subscriptions.push(convertCmd);
+	const looksLikePath = (s: string): boolean => {
+		return /^([A-Za-z]:\\|\.{0,2}\/|~\/|\/)/.test(s);
+	};
+
+	const validatePathsCmd = vscode.commands.registerCommand('t2py.validatePaths', async () => {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) return;
+
+		const doc = editor.document;
+		const sel = editor.selection;
+
+		// Расширяем частичное выделение до целых строк
+		const rangeToProcess = sel && !sel.isEmpty
+			? new vscode.Range(
+				new vscode.Position(sel.start.line, 0),
+				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
+			)
+			: new vscode.Range(
+				new vscode.Position(0, 0),
+				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
+			);
+
+		const raw = doc.getText(rangeToProcess);
+		const lines = raw.split(/\r?\n/);
+
+		const maxLen = Math.max(...lines.map(l => l.trimEnd().length), 10);
+
+		const results = lines.map(origLine => {
+			const trimmed = origLine.trimEnd();
+			const leading = origLine.slice(0, origLine.length - trimmed.length);
+
+			// Извлекаем возможный путь из строки
+			const match = trimmed.match(/^\s*["']?(.*?)["']?\s*,?\s*$/);
+			const candidateRaw = match ? match[1] : trimmed;
+
+			// Проверяем, похожа ли строка на путь
+			if (!looksLikePath(candidateRaw)) {
+			// Возвращаем строку без изменений
+			return origLine;
+			}
+
+			// Нормализуем для проверки
+			const candidate = path.normalize(expandHome(candidateRaw).replace(/\\/g, '/'));
+			const exists = candidate.length > 0 && fs.existsSync(candidate);
+
+			const padding = ' '.repeat(Math.max(1, maxLen - trimmed.length + 2));
+			const lineWithStatus = `${trimmed}${padding}>> ${exists ? 'success' : 'fail'}`;
+			return leading + lineWithStatus;
+		});
+
+		await editor.edit(editBuilder => {
+			editBuilder.replace(rangeToProcess, results.join('\n'));
+		});
+	});
+
+
+
+
+	context.subscriptions.push(convertCmd, validatePathsCmd);
 }
 
 // This method is called when your extension is deactivated

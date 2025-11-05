@@ -3,7 +3,7 @@
   "displayName": "t2py",
   "publisher": "romanvolodin",
   "description": "A lightweight Python helper that streamlines everyday routine tasks.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.105.0"
   },
@@ -24,6 +24,10 @@
       {
         "command": "t2py.convertList",
         "title": "t2py: Convert Lines to Python List"
+      },
+      {
+        "command": "t2py.validatePaths",
+        "title": "t2py: Validate File Paths"
       }
     ]
   },

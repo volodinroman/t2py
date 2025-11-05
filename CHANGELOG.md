@@ -4,6 +4,13 @@ All notable changes to the **T2PY** extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.0.3] - 2025-11-05
+- New command **"Validate File Paths"**:
+  - Instantly validates whether file system paths actually exist on your machine.
+  - Appends a clear status marker ">> success" or ">> fail" aligned to the right of each path.
+  - Supports both single-line selection and full-document validation (automatically detects and ignores non-path lines).
+  - Handles various formats gracefully, including quoted paths, comma-separated lists, and Python-style arrays.
+
 
 ## [0.0.2] - 2025-11-02
 ### Added
