@@ -1,21 +1,17 @@
 # T2PY
 
-A lightweight VS Code helper for Python developers that automates everyday routines. This is a swiss knife for Python developers!
+A lightweight VS Code extension designed for Python developers to automate everyday routines. T2PY acts as a versatile swiss knife for Python workflows, accelerating productivity on repetitive tasks.
 
-## Overview
-
-**T2PY** helps you quickly convert plain text into Python-ready data structures — ideal for small repetitive tasks.  
-Currently, it includes one core feature: converting selected text lines into a Python list with automatic formatting and path normalization.
 
 ## Features
 
-* `t2py: Convert Lines to Python List` - converts text lines into a Python list;
-* `t2py: Validate File Paths` - validates file system paths;
+* **Convert Lines to Python List**. Convert any selected lines of text into a syntactically correct Python list, adding quotes, commas, and variable assignment automatically.
+* **Validate File Paths**. Verify the existence of file system paths directly in your document, with clear success/fail indicators appended inline.
 
 
-## Lines to Python List convertor
+## Convert Lines to Python List
 
-Command `t2py: Convert Lines to Python List`: 
+Command `t2py: Convert Lines to Python List`
 
 - Convert selected text lines into a valid Python list.
 - Normalize Windows-style slashes (`\` → `/`) for Python compatibility.
@@ -40,7 +36,7 @@ my_list = [
 
 ## Path Validation
 
-Command `t2py: Validate File Paths`:
+Command `t2py: Validate File Paths`
 
 * Instantly validates whether file system paths actually exist on your machine.
 * Appends a clear status marker ">> success" or ">> fail" aligned to the right of each path.
