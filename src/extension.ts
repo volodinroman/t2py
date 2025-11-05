@@ -49,7 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
 	const expandHome = (p: string) => p.startsWith('~') ? p.replace(/^~(?=\/|$)/, os.homedir()) : p;
 
 	const looksLikePath = (s: string): boolean => {
-		return /^([A-Za-z]:\\|\.{0,2}\/|~\/|\/)/.test(s);
+		const trimmed = s.trim().replace(/^['"]/, ''); // remove leading quote if any
+		// supports: C:\, C:/, ./, ../, ~/, /, Z:/ etc.
+		return /^([A-Za-z]:[\\/]|\.{0,2}\/|~\/|\/)/.test(trimmed);
 	};
 
 	const validatePathsCmd = vscode.commands.registerCommand('t2py.validatePaths', async () => {
@@ -59,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const doc = editor.document;
 		const sel = editor.selection;
 
-		// Расширяем частичное выделение до целых строк
+		// Determine the range to process
 		const rangeToProcess = sel && !sel.isEmpty
 			? new vscode.Range(
 				new vscode.Position(sel.start.line, 0),
@@ -79,17 +81,17 @@ export function activate(context: vscode.ExtensionContext) {
 			const trimmed = origLine.trimEnd();
 			const leading = origLine.slice(0, origLine.length - trimmed.length);
 
-			// Извлекаем возможный путь из строки
+			// Extract potential path from the line
 			const match = trimmed.match(/^\s*["']?(.*?)["']?\s*,?\s*$/);
 			const candidateRaw = match ? match[1] : trimmed;
 
-			// Проверяем, похожа ли строка на путь
+			// Check if the string looks like a path
 			if (!looksLikePath(candidateRaw)) {
-			// Возвращаем строку без изменений
+			// Return the original line unchanged
 			return origLine;
 			}
 
-			// Нормализуем для проверки
+			// Normalize for checking
 			const candidate = path.normalize(expandHome(candidateRaw).replace(/\\/g, '/'));
 			const exists = candidate.length > 0 && fs.existsSync(candidate);
 
