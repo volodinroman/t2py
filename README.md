@@ -7,10 +7,13 @@ A lightweight VS Code helper for Python developers that automates everyday routi
 **T2PY** helps you quickly convert plain text into Python-ready data structures — ideal for small repetitive tasks.  
 Currently, it includes one core feature: converting selected text lines into a Python list with automatic formatting and path normalization.
 
-
 ## Features
 
-### Lines to Python List convertor
+* `t2py: Convert Lines to Python List` - converts text lines into a Python list;
+* `t2py: Validate File Paths` - validates file system paths;
+
+
+## Lines to Python List convertor
 
 Command `t2py: Convert Lines to Python List`: 
 
@@ -35,7 +38,7 @@ my_list = [
 ]
 ```
 
-### Path Validation command 
+## Path Validation
 
 Command `t2py: Validate File Paths`:
 
