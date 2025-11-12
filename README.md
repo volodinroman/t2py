@@ -1,58 +1,82 @@
 # T2PY
 
-A lightweight VS Code extension designed for Python developers to automate everyday routines. T2PY acts as a versatile swiss knife for Python workflows, accelerating productivity on repetitive tasks.
+A lightweight VS Code extension for Python developers to streamline everyday file path and text manipulation tasks.  T2PY serves as a practical swiss-knife for Python workflows, eliminating repetitive manual edits.
 
 
 ## Features
 
-* **Convert Lines to Python List**. Convert any selected lines of text into a syntactically correct Python list, adding quotes, commas, and variable assignment automatically.
-* **Validate File Paths**. Verify the existence of file system paths directly in your document, with clear success/fail indicators appended inline.
+- **Convert Lines to Python List** – Convert selected text lines into a properly formatted Python list with quotes, commas, and variable assignment.  
+- **Validate File Paths** – Check if file system paths exist, appending inline `>> success` or `>> fail` markers.  
+- **Normalize Paths** – Clean and standardize file paths across your document for consistent, cross-platform syntax.
 
 
 ## Convert Lines to Python List
 
-Command `t2py: Convert Lines to Python List`
+**Command:** `t2py: Convert Lines to Python List`
 
-- Convert selected text lines into a valid Python list.
-- Normalize Windows-style slashes (`\` → `/`) for Python compatibility.
-- Automatically add quotes and commas.
-- Insert a snippet variable placeholder (default: `my_list`) so you can rename it instantly.
+- Converts raw text into a valid Python list.
+- Normalizes slashes (`\` → `/`).
+- Adds quotes, commas, and a rename-ready snippet variable (default: `my_list`).
 
-```python
-# Original List
-/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json
-/home/volod/VSCodeExtensions/svggen/.vscode/settings.json
-/home/volod/VSCodeExtensions/svggen/.vscode/launch.json
-/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json
 
-# Python List
+```
+# Original
+/home/user/project/.vscode/tasks.json
+/home/user/project/.vscode/settings.json
+
+# Result
 my_list = [
-  "/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json",
-  "/home/volod/VSCodeExtensions/svggen/.vscode/settings.json",
-  "/home/volod/VSCodeExtensions/svggen/.vscode/launch.json",
-  "/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json"
+  "/home/user/project/.vscode/tasks.json",
+  "/home/user/project/.vscode/settings.json"
 ]
 ```
 
-## Path Validation
+## Validate File Paths
 
-Command `t2py: Validate File Paths`
+**Command:** `t2py: Validate File Paths`
 
-* Instantly validates whether file system paths actually exist on your machine.
-* Appends a clear status marker ">> success" or ">> fail" aligned to the right of each path.
-* Supports both single-line selection and full-document validation (automatically detects and ignores non-path lines).
-* Handles various formats gracefully, including quoted paths, comma-separated lists, and Python-style arrays.
+* Checks each line for valid paths.
+* Adds aligned `>> success` or `>> fail` indicators.
+* Works on selections or full documents.
+* Ignores comments and unrelated lines.
+
 
 ```
-# Original List
-/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json
-/home/volod/VSCodeExtensions/svggen/.vscode/settings.json
-/home/volod/VSCodeExtensions/svggen/.vscode/launch.json
-/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json
-
-# Validated list (one item has a typo)
-/home/volod/VSCodeExtensions/svggen/.vscode/tasks.json       >> success
-/home/volod/VSCodeExtensions/svggen/.vscode/settings.json    >> success
-/home/voslod/VSCodeExtensions/svggen/.vscode/launch.json     >> fail
-/home/volod/VSCodeExtensions/svggen/.vscode/extensions.json  >> success
+/home/user/project/.vscode/tasks.json      >> success
+/home/user/project/.vscode/invalid.json    >> fail
 ```
+
+## Normalize Paths
+
+**Command:** `t2py: Normalize Paths`
+
+Standardizes path syntax for Python and cross-platform compatibility.
+
+* Converts `\` to `/`.
+* Removes duplicate slashes.
+* Preserves URL schemes (`https://`, `file://`).
+* Handles UNC paths (`//server/share`).
+* Expands `~/` to the user’s home directory.
+* Skips comments and blank lines.
+
+
+```
+# Original
+C:\Projects\\MyApp\\src\\main.py
+\\server\\share\\config.json
+~/Documents//notes.txt
+https://example.com//data
+/home//user///workspace
+
+# Normalized
+C:/Projects/MyApp/src/main.py
+//server/share/config.json
+/home/user/Documents/notes.txt
+https://example.com//data
+/home/user/workspace
+```
+
+### Usage Notes
+
+* Works automatically on selected text or the entire file if nothing is selected.
+* Ideal for preparing file lists, cleaning mixed paths, or validating datasets.
