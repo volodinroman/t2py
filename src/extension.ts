@@ -1,7 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
@@ -10,6 +9,31 @@ import * as os from 'os';
 export function activate(context: vscode.ExtensionContext) {
 
 	// Helpers
+	// return a range (start-of-line .. end-of-line) covering either the selection
+	// or the whole document when selection is empty.
+	const getRangeToProcess = (doc: vscode.TextDocument, sel: vscode.Selection) => {
+		return sel && !sel.isEmpty
+			? new vscode.Range(
+				new vscode.Position(sel.start.line, 0),
+				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
+			)
+			: new vscode.Range(
+				new vscode.Position(0, 0),
+				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
+			);
+	};
+
+	// Prefer VS Code workspace FS when possible (supports remote workspaces).
+	const safeExists = async (p: string): Promise<boolean> => {
+		try {
+			const uri = vscode.Uri.file(p);
+			await vscode.workspace.fs.stat(uri);
+			return true;
+		} catch (e) {
+			// stat throws when not found or inaccessible
+			return false;
+		}
+	};
 	const fixDoubleSlashes = (s: string) => {
 		// Unify separators first
 		let out = s.replace(/\\/g, '/');
@@ -48,20 +72,11 @@ export function activate(context: vscode.ExtensionContext) {
 	// --- Command Convert List ---
 	const convertCmd = vscode.commands.registerCommand('t2py.convertList', async () => {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) { return; }
 
 		const doc = editor.document;
 		const sel = editor.selection;
-		// Determine the range to process
-		const rangeToProcess = sel && !sel.isEmpty
-			? new vscode.Range(
-				new vscode.Position(sel.start.line, 0),
-				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
-			)
-			: new vscode.Range(
-				new vscode.Position(0, 0),
-				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
-			);
+		const rangeToProcess = getRangeToProcess(doc, sel);
 
 		const raw = doc.getText(rangeToProcess);
 		const lines = raw.split(/\r?\n/);
@@ -83,28 +98,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const validatePathsCmd = vscode.commands.registerCommand('t2py.validatePaths', async () => {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) { return; }
 
 		const doc = editor.document;
 		const sel = editor.selection;
-
-		// Determine the range to process
-		const rangeToProcess = sel && !sel.isEmpty
-			? new vscode.Range(
-				new vscode.Position(sel.start.line, 0),
-				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
-			)
-			: new vscode.Range(
-				new vscode.Position(0, 0),
-				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
-			);
+		const rangeToProcess = getRangeToProcess(doc, sel);
 
 		const raw = doc.getText(rangeToProcess);
 		const lines = raw.split(/\r?\n/);
 
 		const maxLen = Math.max(...lines.map(l => l.trimEnd().length), 10);
 
-		const results = lines.map(origLine => {
+		const results = await Promise.all(lines.map(async origLine => {
 			const trimmed = origLine.trimEnd();
 			const leading = origLine.slice(0, origLine.length - trimmed.length);
 
@@ -114,18 +119,18 @@ export function activate(context: vscode.ExtensionContext) {
 
 			// Check if the string looks like a path
 			if (!looksLikePath(candidateRaw)) {
-			// Return the original line unchanged
-			return origLine;
+				// Return the original line unchanged
+				return origLine;
 			}
 
 			// Normalize for checking
 			const candidate = path.normalize(expandHome(candidateRaw).replace(/\\/g, '/'));
-			const exists = candidate.length > 0 && fs.existsSync(candidate);
+			const exists = candidate.length > 0 && await safeExists(candidate);
 
 			const padding = ' '.repeat(Math.max(1, maxLen - trimmed.length + 2));
 			const lineWithStatus = `${trimmed}${padding}>> ${exists ? 'success' : 'fail'}`;
 			return leading + lineWithStatus;
-		});
+		}));
 
 		await editor.edit(editBuilder => {
 			editBuilder.replace(rangeToProcess, results.join('\n'));
@@ -135,20 +140,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const normalizePathsCmd = vscode.commands.registerCommand('t2py.normalizePaths', async () => {
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) { return; }
 
 		const doc = editor.document;
 		const sel = editor.selection;
 
-		const rangeToProcess = sel && !sel.isEmpty
-			? new vscode.Range(
-				new vscode.Position(sel.start.line, 0),
-				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
-			)
-			: new vscode.Range(
-				new vscode.Position(0, 0),
-				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
-			);
+		const rangeToProcess = getRangeToProcess(doc, sel);
 
 		const raw = doc.getText(rangeToProcess);
 		const lines = raw.split(/\r?\n/);
@@ -156,8 +153,9 @@ export function activate(context: vscode.ExtensionContext) {
 		const normalizedLines = lines.map(line => {
 			const trimmed = line.trim();
 
-			if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#'))
+			if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#')) {
 				return line; // skip empty/comments
+			}
 
 			if (/["',]/.test(trimmed)) {
 				return line.replace(/\\/g, '/').replace(/([^:])\/{2,}/g, '$1/'); // handle inside quotes
