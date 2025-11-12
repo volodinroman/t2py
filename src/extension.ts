@@ -9,6 +9,38 @@ import * as os from 'os';
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
+	// Helpers
+	const fixDoubleSlashes = (s: string) => {
+		// Unify separators first
+		let out = s.replace(/\\/g, '/');
+
+		// Preserve URL schemes like https://, file://, etc.
+		if (/^[a-zA-Z][\w+.-]*:\/\//.test(out)) {
+			return out;
+		}
+
+		// Preserve UNC prefix (//server/share), but collapse extras:
+		if (out.startsWith('//')) {
+			// Ensure exactly two leading slashes
+			out = out.replace(/^\/{2,}/, '//');
+			// Collapse any remaining multiple slashes to one
+			out = out.replace(/\/{2,}/g, '/');
+			return out;
+		}
+
+		// Normal paths: collapse any multiple slashes to one
+		out = out.replace(/\/{2,}/g, '/');
+		return out;
+	};
+
+	const expandHome = (p: string) => p.startsWith('~') ? p.replace(/^~(?=\/|$)/, os.homedir()) : p;
+
+	const looksLikePath = (s: string): boolean => {
+		const trimmed = s.trim().replace(/^['"]/, ''); // remove leading quote if any
+		// supports: C:\, C:/, ./, ../, ~/, /, Z:/ etc.
+		return /^([A-Za-z]:[\\/]|\.{0,2}[\\/]|~[\\/]|[\\/])/.test(trimmed);
+	};
+
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "t2py" is now active!');
@@ -20,23 +52,24 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const doc = editor.document;
 		const sel = editor.selection;
-		const fullRange = new vscode.Range(
-			new vscode.Position(0, 0),
-			new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
-		);
-		const rangeToProcess = sel && !sel.isEmpty ? sel : fullRange;
-		const raw = doc.getText(rangeToProcess);
+		// Determine the range to process
+		const rangeToProcess = sel && !sel.isEmpty
+			? new vscode.Range(
+				new vscode.Position(sel.start.line, 0),
+				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
+			)
+			: new vscode.Range(
+				new vscode.Position(0, 0),
+				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
+			);
 
-		const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+		const raw = doc.getText(rangeToProcess);
+		const lines = raw.split(/\r?\n/);
 
 		const norm = (s: string) => {
-			// remove trailing commas and spaces
-			let str = s.replace(/,+\s*$/, '');
-			// remove surrounding quotes
-			str = str.replace(/^["']|["']$/g, '');
-			// Escape only backslashes
-			str = str.replace(/\\/g, '/');
-			// Add correct quotes
+			let str = s.replace(/,+\s*$/, '');      // remove trailing commas
+			str = str.replace(/^["']|["']$/g, '');  // strip surrounding quotes
+			str = fixDoubleSlashes(str);            // <-- handles //, \\, mixed, URLs, UNC
 			return `"${str}"`;
 		};
 
@@ -45,14 +78,8 @@ export function activate(context: vscode.ExtensionContext) {
 		await editor.insertSnippet(snippet, rangeToProcess);
 	});
 
-	// --- Command Validate Paths ---
-	const expandHome = (p: string) => p.startsWith('~') ? p.replace(/^~(?=\/|$)/, os.homedir()) : p;
+	
 
-	const looksLikePath = (s: string): boolean => {
-		const trimmed = s.trim().replace(/^['"]/, ''); // remove leading quote if any
-		// supports: C:\, C:/, ./, ../, ~/, /, Z:/ etc.
-		return /^([A-Za-z]:[\\/]|\.{0,2}\/|~\/|\/)/.test(trimmed);
-	};
 
 	const validatePathsCmd = vscode.commands.registerCommand('t2py.validatePaths', async () => {
 		const editor = vscode.window.activeTextEditor;
@@ -106,9 +133,57 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 
+	const normalizePathsCmd = vscode.commands.registerCommand('t2py.normalizePaths', async () => {
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) return;
+
+		const doc = editor.document;
+		const sel = editor.selection;
+
+		const rangeToProcess = sel && !sel.isEmpty
+			? new vscode.Range(
+				new vscode.Position(sel.start.line, 0),
+				new vscode.Position(sel.end.line, doc.lineAt(sel.end.line).text.length)
+			)
+			: new vscode.Range(
+				new vscode.Position(0, 0),
+				new vscode.Position(doc.lineCount - 1, doc.lineAt(doc.lineCount - 1).text.length)
+			);
+
+		const raw = doc.getText(rangeToProcess);
+		const lines = raw.split(/\r?\n/);
+
+		const normalizedLines = lines.map(line => {
+			const trimmed = line.trim();
+
+			if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#'))
+				return line; // skip empty/comments
+
+			if (/["',]/.test(trimmed)) {
+				return line.replace(/\\/g, '/').replace(/([^:])\/{2,}/g, '$1/'); // handle inside quotes
+			}
+
+			if (looksLikePath(trimmed)) {
+				const expanded = expandHome(trimmed);
+				let normalized = path.normalize(expanded).replace(/\\/g, '/');
+				normalized = fixDoubleSlashes(normalized);
+				return normalized;
+			}
+
+			return line;
+		});
+
+		await editor.edit(editBuilder => {
+			editBuilder.replace(rangeToProcess, normalizedLines.join('\n'));
+		});
+	});
 
 
-	context.subscriptions.push(convertCmd, validatePathsCmd);
+
+
+
+
+	context.subscriptions.push(convertCmd, validatePathsCmd, normalizePathsCmd);
 }
 
 // This method is called when your extension is deactivated

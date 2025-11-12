@@ -28,6 +28,10 @@
       {
         "command": "t2py.validatePaths",
         "title": "t2py: Validate File Paths"
+      },
+      {
+        "command": "t2py.normalizePaths",
+        "title": "t2py: Normalize Paths"
       }
     ]
   },
