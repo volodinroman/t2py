@@ -3,7 +3,7 @@
   "displayName": "t2py",
   "publisher": "romanvolodin",
   "description": "A lightweight Python helper that streamlines everyday routine tasks.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.105.0"
   },

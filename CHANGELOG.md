@@ -4,6 +4,13 @@ All notable changes to the **T2PY** extension are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
+## [0.0.4] - 2025-11-11
+### Added
+- New command **"Normalize Paths"**:
+  - Helps with normalizing selected paths
+  - Supports both single-line selection and full-document validation (automatically detects and ignores non-path lines).
+
+---
 ## [0.0.3] - 2025-11-05
 ### Added
 - New command **"Validate File Paths"**:
